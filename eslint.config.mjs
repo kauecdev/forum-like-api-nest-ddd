@@ -6,7 +6,7 @@ export default [
   ...new FlatCompat({
     baseDirectory: path.dirname(url.fileURLToPath(import.meta.url)),
   }).config({
-    ignores: ['node_modules', 'dist'],
+    ignorePatterns: ['node_modules', 'dist'],
     env: {
       es2021: true,
       node: true,
