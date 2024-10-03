@@ -2,8 +2,8 @@ import { AppModule } from '@/infra/app.module'
 import { Test } from '@nestjs/testing'
 import { INestApplication } from '@nestjs/common'
 import request from 'supertest'
-import { PrismaService } from '@/infra/prisma/prisma.service'
 import { JwtService } from '@nestjs/jwt'
+import { PrismaService } from '@/infra/database/prisma/prisma.service'
 
 describe('Create Question Controller (E2E)', () => {
   let app: INestApplication

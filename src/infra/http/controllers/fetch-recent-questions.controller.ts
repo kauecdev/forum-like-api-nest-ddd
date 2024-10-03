@@ -1,9 +1,10 @@
-import { Get, Query, UseGuards } from '@nestjs/common'
+import { BadRequestException, Get, Query, UseGuards } from '@nestjs/common'
 import { Controller } from '@nestjs/common'
 import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation-pipe'
-import { PrismaService } from '@/infra/prisma/prisma.service'
 import { z } from 'zod'
 import { JwtAuthGuard } from '@/infra/auth/jwt-auth.guard'
+import { FetchRecentQuestionsUseCase } from '@/domain/forum/application/use-cases/fetch-recent-questions'
+import { QuestionPresenter } from '../presenters/question-presenter'
 
 const pageQueryParamSchema = z
   .string()
@@ -12,7 +13,7 @@ const pageQueryParamSchema = z
   .transform(Number)
   .pipe(z.number().min(1))
 
-const perPageQueryParamSchema = z
+const pageSizeQueryParamSchema = z
   .string()
   .optional()
   .default('20')
@@ -20,34 +21,37 @@ const perPageQueryParamSchema = z
   .pipe(z.number().min(20))
 
 const pageQueryValidationPipe = new ZodValidationPipe(pageQueryParamSchema)
-const perPageQueryValidationPipe = new ZodValidationPipe(
-  perPageQueryParamSchema,
+const pageSizeQueryValidationPipe = new ZodValidationPipe(
+  pageSizeQueryParamSchema,
 )
 
 type PageQueryParamSchema = z.infer<typeof pageQueryParamSchema>
-type PerPageQueryParamSchema = z.infer<typeof perPageQueryParamSchema>
+type pageSizeQueryParamSchema = z.infer<typeof pageSizeQueryParamSchema>
 
 @Controller('/questions')
 @UseGuards(JwtAuthGuard)
 export class FetchRecentQuestionsController {
-  constructor(private prisma: PrismaService) {}
+  constructor(private fetchRecentQuestions: FetchRecentQuestionsUseCase) {}
 
   @Get()
   async handle(
     @Query('page', pageQueryValidationPipe) page: PageQueryParamSchema,
-    @Query('perPage', perPageQueryValidationPipe)
-    perPage: PerPageQueryParamSchema,
+    @Query('pageSize', pageSizeQueryValidationPipe)
+    pageSize: pageSizeQueryParamSchema,
   ) {
-    const questions = await this.prisma.question.findMany({
-      take: perPage,
-      skip: (page - 1) * perPage,
-      orderBy: {
-        createdAt: 'desc',
-      },
+    const result = await this.fetchRecentQuestions.execute({
+      page,
+      pageSize,
     })
 
+    if (result.isLeft()) {
+      throw new BadRequestException()
+    }
+
+    const questions = result.value.questions
+
     return {
-      questions,
+      questions: questions.map(QuestionPresenter.toHTTP),
     }
   }
 }

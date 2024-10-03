@@ -8,13 +8,13 @@ import { QuestionBestAnswerChoosenEvent } from '../events/question-best-answer-c
 
 export interface QuestionProps {
   authorId: UniqueEntityId
-  bestAnswerId?: UniqueEntityId
+  bestAnswerId?: UniqueEntityId | null
   title: string
   content: string
   slug: Slug
   attachments: QuestionAttachmentList
   createdAt: Date
-  updatedAt?: Date
+  updatedAt?: Date | null
 }
 
 export class Question extends AggregateRoot<QuestionProps> {
@@ -28,6 +28,10 @@ export class Question extends AggregateRoot<QuestionProps> {
 
   get title() {
     return this.props.title
+  }
+
+  get content() {
+    return this.props.content
   }
 
   get slug() {
@@ -74,7 +78,7 @@ export class Question extends AggregateRoot<QuestionProps> {
     this.touch()
   }
 
-  set bestAnswerId(bestAnswerId: UniqueEntityId | undefined) {
+  set bestAnswerId(bestAnswerId: UniqueEntityId | undefined | null) {
     if (bestAnswerId === undefined) {
       return
     }
