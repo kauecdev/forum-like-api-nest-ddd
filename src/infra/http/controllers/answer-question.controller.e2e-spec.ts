@@ -7,6 +7,7 @@ import { StudentFactory } from 'test/factories/make-student'
 import { DatabaseModule } from '@/infra/database/database.module'
 import { PrismaService } from '@/infra/database/prisma/prisma.service'
 import { QuestionFactory } from 'test/factories/make-question'
+import { AttachmentFactory } from 'test/factories/make-attachment'
 
 describe('Answer Question Controller (E2E)', () => {
   let app: INestApplication
@@ -14,11 +15,12 @@ describe('Answer Question Controller (E2E)', () => {
   let jwt: JwtService
   let questionFactory: QuestionFactory
   let studentFactory: StudentFactory
+  let attachmentFactory: AttachmentFactory
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule, DatabaseModule],
-      providers: [StudentFactory, QuestionFactory],
+      providers: [StudentFactory, QuestionFactory, AttachmentFactory],
     }).compile()
 
     app = moduleRef.createNestApplication()
@@ -26,6 +28,7 @@ describe('Answer Question Controller (E2E)', () => {
     prisma = moduleRef.get(PrismaService)
     studentFactory = moduleRef.get(StudentFactory)
     questionFactory = moduleRef.get(QuestionFactory)
+    attachmentFactory = moduleRef.get(AttachmentFactory)
     jwt = moduleRef.get(JwtService)
 
     await app.init()
@@ -40,6 +43,9 @@ describe('Answer Question Controller (E2E)', () => {
       authorId: user.id,
     })
 
+    const attachment1 = await attachmentFactory.makePrismaAttachment()
+    const attachment2 = await attachmentFactory.makePrismaAttachment()
+
     const questionId = question.id.toString()
 
     const response = await request(app.getHttpServer())
@@ -47,15 +53,24 @@ describe('Answer Question Controller (E2E)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         content: 'New answer',
+        attachments: [attachment1.id.toString(), attachment2.id.toString()],
       })
 
-    const questionOnDatabase = await prisma.answer.findFirst({
+    const answerOnDatabase = await prisma.answer.findFirst({
       where: {
         content: 'New answer',
       },
     })
 
     expect(response.statusCode).toBe(201)
-    expect(questionOnDatabase).toBeTruthy()
+    expect(answerOnDatabase).toBeTruthy()
+
+    const attachmentsOnDatabase = await prisma.attachment.findMany({
+      where: {
+        answerId: answerOnDatabase.id,
+      },
+    })
+
+    expect(attachmentsOnDatabase).toHaveLength(2)
   })
 })
