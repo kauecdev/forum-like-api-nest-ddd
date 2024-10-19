@@ -34,6 +34,7 @@ export class UploadAndCreateAttachmentUseCase {
       return left(new InvalidAttachmentTypeError(fileType))
     }
 
+    // requires cloudflare configuration
     const { url } = await this.uploader.upload({
       fileName,
       fileType,
