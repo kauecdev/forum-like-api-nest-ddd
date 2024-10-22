@@ -32,6 +32,7 @@ describe('Fetch Question Answers Use Case', () => {
     const result = await sut.execute({
       questionId: 'question-01',
       page: 1,
+      pageSize: 20,
     })
 
     expect(result.value?.answers).toHaveLength(3)
@@ -47,6 +48,7 @@ describe('Fetch Question Answers Use Case', () => {
     const result = await sut.execute({
       questionId: 'question-01',
       page: 2,
+      pageSize: 20,
     })
 
     expect(result.value?.answers).toHaveLength(2)
