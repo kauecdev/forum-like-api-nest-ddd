@@ -11,7 +11,7 @@ export class QuestionPresenter {
         ? question.bestAnswerId.toString()
         : null,
       createdAt: question.createdAt,
-      updatedAt: question.udpatedAt,
+      updatedAt: question.updatedAt,
     }
   }
 }

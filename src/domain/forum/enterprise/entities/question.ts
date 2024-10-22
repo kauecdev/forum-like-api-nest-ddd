@@ -46,7 +46,7 @@ export class Question extends AggregateRoot<QuestionProps> {
     return this.props.createdAt
   }
 
-  get udpatedAt() {
+  get updatedAt() {
     return this.props.updatedAt
   }
 
